@@ -2,11 +2,9 @@ import json
 from drink import *
 from glob import glob
 import os
-import re
 from dataclasses import dataclass
 import sys
 from optimize import optimize
-from pprint import pprint
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -14,6 +12,7 @@ FILES = glob(f"{DIR}/out/*.json")
 
 drinks = {}
 budget = None
+N_DRINKS = None
 
 def getFileName(path):
     name = os.path.basename(path)
@@ -50,6 +49,9 @@ while i < argc:
             sections.append(sec)
 
         i += 1 
+    elif sys.argv[i] == "-n":
+        N_DRINKS = int(sys.argv[i+1])
+        i += 1 
     elif sys.argv[i] == "-b":
         budget = float(sys.argv[i+1])
         i += 1 
@@ -72,7 +74,7 @@ def calcRatio(drink):
 def sortFunc(r: RatioObject):
     return r.ratio
 
-def getBest(lst, n):
+def getBest(lst, n=10):
     i = 1 
     for ratio in lst[:n]:
         r = ratio.ratio
@@ -91,11 +93,18 @@ if not budget:
             i += 1
 
     ratios.sort(key=sortFunc)
-    getBest(ratios, 10)
+    if N_DRINKS:
+        getBest(ratios, N_DRINKS)
+    else:
+        getBest(ratios)
 else:
     all_drinks = []
     for section in sections:
         all_drinks += drinks[section]
+
+    if N_DRINKS:
+        all_drinks = all_drinks[:N_DRINKS]
+
     res = optimize(all_drinks, budget, verbose=verbose)
     price = 0
 

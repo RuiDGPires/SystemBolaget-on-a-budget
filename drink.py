@@ -1,5 +1,4 @@
 from dataclasses import dataclass, asdict, fields
-from filter import CustomFilter
 
 @dataclass
 class Drink:

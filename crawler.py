@@ -170,7 +170,7 @@ for section in sections:
             last = new // 10
         n += 1
 
-    with open(f"out/{section}.json", "w", encoding="utf-8") as f:
+    with open(f"data/{section}.json", "w", encoding="utf-8") as f:
         json.dump(drinks[section], f, ensure_ascii=False)
 
     print(f"{section} page Complete")

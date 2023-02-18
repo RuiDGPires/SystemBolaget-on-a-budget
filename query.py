@@ -6,17 +6,19 @@ from dataclasses import dataclass
 import sys
 from optimize import optimize
 
-DIR = os.path.abspath(os.path.dirname(__file__))
+def getFileName(path):
+    name = os.path.basename(path)
+    return os.path.splitext(name)[0]
 
-FILES = glob(f"{DIR}/out/*.json")
+DIR = os.path.abspath(os.path.dirname(__file__))
+FILES = glob(f"{DIR}/data/*.json")
+BLACKLISTS = list(map(lambda x: getFileName(x), glob(f"{DIR}/blacklist/*")))
+
 
 drinks = {}
 budget = None
 N_DRINKS = None
 
-def getFileName(path):
-    name = os.path.basename(path)
-    return os.path.splitext(name)[0]
 
 for file in FILES:
     with open(file, "r", encoding="utf-8") as f:
@@ -34,6 +36,7 @@ argc = len(sys.argv)
 i = 0
 sections = list(drinks.keys())
 verbose = False
+blacklist = []
 
 while i < argc:
     if sys.argv[i] == "-s":
@@ -57,8 +60,17 @@ while i < argc:
         i += 1 
     elif sys.argv[i] == "-v":
         verbose = True
-        i += 1 
+    elif sys.argv[i] == "-l": # Location
+        location = sys.argv[i+1]
+        if location not in BLACKLISTS:
+            print("Unknown store")
+            exit()
 
+        with open(os.path.join("blacklist", f"{location}.txt"), encoding="utf-8") as f:
+            blacklist = list(map(lambda line: line.rstrip(), f.readlines()))
+
+        i += 1
+        
     i += 1
 
     
@@ -87,8 +99,7 @@ if not budget:
     for section in sections:
         i = 0
         for drink in drinks[section]:
-            if budget:
-                if drink.price[0]*100+drink.price[1] > budget*100: continue
+            if drink.name in blacklist: continue
             ratios.append(RatioObject(id=i,section=section,ratio=calcRatio(drink)))
             i += 1
 
@@ -104,6 +115,8 @@ else:
 
     if N_DRINKS:
         all_drinks = all_drinks[:N_DRINKS]
+
+    all_drinks = list(filter(lambda x: x.name not in blacklist, all_drinks))
 
     res = optimize(all_drinks, budget, verbose=verbose)
     price = 0
